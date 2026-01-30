@@ -1,4 +1,3 @@
--- SLKS10_Hub.lua
 -- SLKS GAMING | By SLKS-GAMING
 -- Forsaken | Mobile Safe (Delta)
 
@@ -148,9 +147,8 @@ SLKS GAMING HUB
 Game: Forsaken
 Platform: Mobile (Delta)
 
-• WalkSpeed ON / OFF
-• ESP Player + Distance
-• Clean UI
+• WalkSpeed (Anti Reset)
+• ESP Player (Anti Block)
 
 By SLKS-GAMING
 ]]
@@ -160,8 +158,34 @@ By SLKS-GAMING
 -------------------------------------------------
 local MainTab = createTab("Main")
 
+-------------------------------------------------
+-- WALKSPEED (FIX FOR FORSAKEN)
+-------------------------------------------------
 local wsValue = 16
 local wsEnabled = false
+
+local function getHumanoid()
+	local char = player.Character
+	if char then
+		return char:FindFirstChildOfClass("Humanoid")
+	end
+end
+
+RunService.Stepped:Connect(function()
+	if not wsEnabled then return end
+	local hum = getHumanoid()
+	if hum and hum.WalkSpeed ~= wsValue then
+		hum.WalkSpeed = wsValue
+	end
+end)
+
+player.CharacterAdded:Connect(function()
+	task.wait(1)
+	if wsEnabled then
+		local hum = getHumanoid()
+		if hum then hum.WalkSpeed = wsValue end
+	end
+end)
 
 local WSLabel = Instance.new("TextLabel", MainTab)
 WSLabel.Size = UDim2.new(1,-10,0,25)
@@ -173,7 +197,6 @@ WSLabel.TextSize = 16
 WSLabel.TextColor3 = Color3.new(0,0,0)
 WSLabel.TextXAlignment = Enum.TextXAlignment.Left
 
--- Slider
 local SliderBG = Instance.new("Frame", MainTab)
 SliderBG.Size = UDim2.new(1,-10,0,16)
 SliderBG.Position = UDim2.new(0,5,0,40)
@@ -192,9 +215,6 @@ local function updateSpeed(x)
 	wsValue = math.floor(rel*100)
 	SliderFill.Size = UDim2.new(rel,0,1,0)
 	WSLabel.Text = "WalkSpeed: "..wsValue
-	if wsEnabled and player.Character and player.Character:FindFirstChild("Humanoid") then
-		player.Character.Humanoid.WalkSpeed = wsValue
-	end
 end
 
 SliderBG.InputBegan:Connect(function(i)
@@ -210,7 +230,6 @@ end)
 
 UIS.InputEnded:Connect(function() draggingSlider = false end)
 
--- WalkSpeed Toggle
 local WSToggle = Instance.new("TextButton", MainTab)
 WSToggle.Size = UDim2.new(1,-10,0,35)
 WSToggle.Position = UDim2.new(0,5,0,70)
@@ -223,49 +242,43 @@ Instance.new("UICorner", WSToggle).CornerRadius = UDim.new(0,12)
 
 WSToggle.MouseButton1Click:Connect(function()
 	wsEnabled = not wsEnabled
-	if player.Character and player.Character:FindFirstChild("Humanoid") then
-		player.Character.Humanoid.WalkSpeed = wsEnabled and wsValue or 16
-	end
 	WSToggle.Text = wsEnabled and "WalkSpeed : ON" or "WalkSpeed : OFF"
 	WSToggle.BackgroundColor3 = wsEnabled and Color3.fromRGB(60,180,90) or Color3.fromRGB(200,60,60)
 end)
 
 -------------------------------------------------
--- ESP PLAYER + DISTANCE
+-- ESP (FIX FOR FORSAKEN)
 -------------------------------------------------
 local espEnabled = false
-local espFolder = Instance.new("Folder", gui)
-espFolder.Name = "ESP_FOLDER"
+local espCache = {}
 
 local function clearESP()
-	espFolder:ClearAllChildren()
+	for _,v in pairs(espCache) do
+		if v then v:Destroy() end
+	end
+	table.clear(espCache)
+end
+
+local function addESP(plr)
+	if plr == player then return end
+	if not plr.Character then return end
+	if espCache[plr] then return end
+
+	local h = Instance.new("Highlight")
+	h.FillColor = Color3.fromRGB(255,0,0)
+	h.OutlineColor = Color3.fromRGB(255,255,255)
+	h.FillTransparency = 0.5
+	h.OutlineTransparency = 0
+	h.Adornee = plr.Character
+	h.Parent = game.CoreGui
+
+	espCache[plr] = h
 end
 
 RunService.RenderStepped:Connect(function()
-	clearESP()
 	if not espEnabled then return end
-	local myHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-	if not myHRP then return end
-
 	for _,plr in pairs(Players:GetPlayers()) do
-		if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-			local hrp = plr.Character.HumanoidRootPart
-			local dist = math.floor((hrp.Position-myHRP.Position).Magnitude)
-
-			local bb = Instance.new("BillboardGui", espFolder)
-			bb.Adornee = hrp
-			bb.Size = UDim2.new(0,200,0,40)
-			bb.AlwaysOnTop = true
-
-			local txt = Instance.new("TextLabel", bb)
-			txt.Size = UDim2.new(1,0,1,0)
-			txt.BackgroundTransparency = 1
-			txt.Text = plr.Name.." ["..dist.."m]"
-			txt.TextColor3 = Color3.fromRGB(255,0,0)
-			txt.TextStrokeTransparency = 0
-			txt.Font = Enum.Font.GothamBold
-			txt.TextScaled = true
-		end
+		addESP(plr)
 	end
 end)
 
