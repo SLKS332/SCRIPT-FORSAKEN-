@@ -1,5 +1,6 @@
 -- SLKS GAMING | By SLKS-GAMING
 -- Forsaken | Mobile Safe (Delta)
+-- NOTE: This is DEMO VERSION
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
@@ -39,7 +40,7 @@ Title.Size = UDim2.new(1,-120,1,0)
 Title.Position = UDim2.new(0,15,0,0)
 Title.BackgroundTransparency = 1
 Title.RichText = true
-Title.Text = "<b>SLKS GAMING</b>\n<font size='14'>By SLKS-GAMING</font>"
+Title.Text = "<b>SLKS GAMING</b>\n<font size='14'>DEMO VERSION</font>"
 Title.Font = Enum.Font.GothamBold
 Title.TextScaled = true
 Title.TextColor3 = Color3.new(1,1,1)
@@ -54,12 +55,11 @@ Close.Font = Enum.Font.GothamBold
 Close.TextScaled = true
 Close.BackgroundColor3 = Color3.fromRGB(255,90,90)
 Instance.new("UICorner", Close).CornerRadius = UDim.new(1,0)
-
 Close.MouseButton1Click:Connect(function()
 	gui:Destroy()
 end)
 
--- MINIMIZE ✅
+-- MINIMIZE
 local Minimize = Instance.new("TextButton", Header)
 Minimize.Size = UDim2.new(0,40,0,30)
 Minimize.Position = UDim2.new(1,-90,0.2,0)
@@ -70,74 +70,39 @@ Minimize.BackgroundColor3 = Color3.fromRGB(255,200,80)
 Instance.new("UICorner", Minimize).CornerRadius = UDim.new(1,0)
 
 -------------------------------------------------
--- DRAG
+-- CONTENT
 -------------------------------------------------
-local dragging, dragStart, startPos = false
+local Content = Instance.new("Frame", Main)
+Content.Size = UDim2.new(1,0,1,-50)
+Content.Position = UDim2.new(0,0,0,50)
+Content.BackgroundTransparency = 1
 
-Header.InputBegan:Connect(function(i)
-	if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		dragStart = i.Position
-		startPos = Main.Position
-	end
-end)
+-------------------------------------------------
+-- MINIMIZE LOGIC (SAFE)
+-------------------------------------------------
+local minimized = false
+local fullSize = Main.Size
 
-UIS.InputChanged:Connect(function(i)
-	if dragging then
-		local delta = i.Position - dragStart
-		Main.Position = UDim2.new(
-			startPos.X.Scale,
-			startPos.X.Offset + delta.X,
-			startPos.Y.Scale,
-			startPos.Y.Offset + delta.Y
-		)
-	end
-end)
-
-UIS.InputEnded:Connect(function()
-	dragging = false
+Minimize.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	Content.Visible = not minimized
+	Main.Size = minimized and UDim2.new(0,420,0,55) or fullSize
+	Minimize.Text = minimized and "+" or "-"
 end)
 
 -------------------------------------------------
 -- TAB SYSTEM
 -------------------------------------------------
-local TabBar = Instance.new("Frame", Main)
-TabBar.Size = UDim2.new(0,120,1,-60)
-TabBar.Position = UDim2.new(0,10,0,55)
+local TabBar = Instance.new("Frame", Content)
+TabBar.Size = UDim2.new(0,120,1,-10)
+TabBar.Position = UDim2.new(0,10,0,5)
 TabBar.BackgroundTransparency = 1
 
-local Pages = Instance.new("Frame", Main)
-Pages.Size = UDim2.new(1,-150,1,-60)
-Pages.Position = UDim2.new(0,140,0,55)
+local Pages = Instance.new("Frame", Content)
+Pages.Size = UDim2.new(1,-150,1,-10)
+Pages.Position = UDim2.new(0,140,0,5)
 Pages.BackgroundTransparency = 1
 
--- MINIMIZE LOGIC ✅
-local minimized = false
-local oldSize = Main.Size
-
-Minimize.MouseButton1Click:Connect(function()
-	minimized = not minimized
-	if minimized then
-		oldSize = Main.Size
-		Main.Size = UDim2.new(0,420,0,55)
-		for _,v in ipairs(Main:GetChildren()) do
-			if v ~= Header then
-				v.Visible = false
-			end
-		end
-		Minimize.Text = "+"
-	else
-		Main.Size = oldSize
-		for _,v in ipairs(Main:GetChildren()) do
-			v.Visible = true
-		end
-		Minimize.Text = "-"
-	end
-end)
-
--------------------------------------------------
--- TAB CREATE
--------------------------------------------------
 local CurrentTab
 local tabCount = 0
 
@@ -149,7 +114,6 @@ local function createTab(name)
 	btn.Font = Enum.Font.GothamBold
 	btn.TextSize = 14
 	btn.BackgroundColor3 = Color3.fromRGB(235,235,235)
-	btn.TextColor3 = Color3.new(0,0,0)
 	Instance.new("UICorner", btn).CornerRadius = UDim.new(0,12)
 
 	local page = Instance.new("Frame", Pages)
@@ -173,12 +137,12 @@ local function createTab(name)
 end
 
 -------------------------------------------------
--- TAB MAIN
+-- MAIN TAB
 -------------------------------------------------
 local MainTab = createTab("Main")
 
 -------------------------------------------------
--- ESP PLAYER (RED / GREEN)
+-- ESP PLAYER
 -------------------------------------------------
 local espEnabled = false
 local espCache = {}
@@ -186,12 +150,8 @@ local espCache = {}
 local function isKiller(plr)
 	local char = plr.Character
 	if not char then return false end
-
 	local role = char:GetAttribute("Role")
-	if role and tostring(role):lower():find("killer") then
-		return true
-	end
-	return false
+	return role and tostring(role):lower():find("killer")
 end
 
 local function clearESP()
@@ -235,4 +195,58 @@ ESPBtn.MouseButton1Click:Connect(function()
 	ESPBtn.Text = espEnabled and "ESP Player : ON" or "ESP Player : OFF"
 	ESPBtn.BackgroundColor3 = espEnabled and Color3.fromRGB(60,180,90) or Color3.fromRGB(200,60,60)
 	if not espEnabled then clearESP() end
+end)
+
+-------------------------------------------------
+-- TELEPORT SPEED (SLIDER 0–50)
+-------------------------------------------------
+local tpEnabled = false
+local tpSpeed = 5
+
+RunService.RenderStepped:Connect(function()
+	if not tpEnabled then return end
+	local char = player.Character
+	if not char then return end
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	if not hrp or not hum then return end
+
+	if hum.MoveDirection.Magnitude > 0 then
+		hrp.CFrame = hrp.CFrame + hum.MoveDirection * tpSpeed * 0.1
+	end
+end)
+
+local TPBtn = Instance.new("TextButton", MainTab)
+TPBtn.Size = UDim2.new(1,-10,0,35)
+TPBtn.Position = UDim2.new(0,5,0,45)
+TPBtn.Text = "Teleport Speed : OFF"
+TPBtn.Font = Enum.Font.GothamBold
+TPBtn.TextSize = 16
+TPBtn.TextColor3 = Color3.new(1,1,1)
+TPBtn.BackgroundColor3 = Color3.fromRGB(200,60,60)
+Instance.new("UICorner", TPBtn).CornerRadius = UDim.new(0,12)
+
+TPBtn.MouseButton1Click:Connect(function()
+	tpEnabled = not tpEnabled
+	TPBtn.Text = tpEnabled and ("Teleport Speed : ON ("..tpSpeed..")") or "Teleport Speed : OFF"
+	TPBtn.BackgroundColor3 = tpEnabled and Color3.fromRGB(60,180,90) or Color3.fromRGB(200,60,60)
+end)
+
+-- SPEED SLIDER
+local Slider = Instance.new("TextButton", MainTab)
+Slider.Size = UDim2.new(1,-10,0,30)
+Slider.Position = UDim2.new(0,5,0,85)
+Slider.Text = "Speed : 5"
+Slider.Font = Enum.Font.Gotham
+Slider.TextSize = 14
+Slider.BackgroundColor3 = Color3.fromRGB(220,220,220)
+Instance.new("UICorner", Slider).CornerRadius = UDim.new(0,12)
+
+Slider.MouseButton1Click:Connect(function()
+	tpSpeed += 1
+	if tpSpeed > 50 then tpSpeed = 0 end
+	Slider.Text = "Speed : "..tpSpeed
+	if tpEnabled then
+		TPBtn.Text = "Teleport Speed : ON ("..tpSpeed..")"
+	end
 end)
