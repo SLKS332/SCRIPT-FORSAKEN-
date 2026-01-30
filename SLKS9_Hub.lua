@@ -1,6 +1,6 @@
--- SLKS9_Hub.lua
+-- SLKS10_Hub.lua
 -- SLKS GAMING | By SLKS-GAMING
--- Mobile Safe | Delta OK
+-- Forsaken | Mobile Safe (Delta)
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
@@ -60,34 +60,26 @@ Close.MouseButton1Click:Connect(function()
 end)
 
 -------------------------------------------------
--- DRAG MENU
+-- DRAG
 -------------------------------------------------
-local dragging = false
-local dragStart, startPos
+local dragging, dragStart, startPos = false
 
-Header.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.Touch
-	or input.UserInputType == Enum.UserInputType.MouseButton1 then
+Header.InputBegan:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
 		dragging = true
-		dragStart = input.Position
+		dragStart = i.Position
 		startPos = Main.Position
 	end
 end)
 
-UIS.InputChanged:Connect(function(input)
-	if dragging and (input.UserInputType == Enum.UserInputType.Touch
-	or input.UserInputType == Enum.UserInputType.MouseMovement) then
-		local delta = input.Position - dragStart
-		Main.Position = UDim2.new(
-			startPos.X.Scale, startPos.X.Offset + delta.X,
-			startPos.Y.Scale, startPos.Y.Offset + delta.Y
-		)
+UIS.InputChanged:Connect(function(i)
+	if dragging and (i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseMovement) then
+		local delta = i.Position - dragStart
+		Main.Position = UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
 	end
 end)
 
-UIS.InputEnded:Connect(function()
-	dragging = false
-end)
+UIS.InputEnded:Connect(function() dragging = false end)
 
 -------------------------------------------------
 -- TAB SYSTEM
@@ -102,18 +94,18 @@ Pages.Size = UDim2.new(1,-150,1,-60)
 Pages.Position = UDim2.new(0,140,0,55)
 Pages.BackgroundTransparency = 1
 
-local Tabs = {}
 local CurrentTab
+local tabCount = 0
 
 local function createTab(name)
 	local btn = Instance.new("TextButton", TabBar)
 	btn.Size = UDim2.new(1,0,0,40)
-	btn.Position = UDim2.new(0,0,0,#Tabs*45)
+	btn.Position = UDim2.new(0,0,0,tabCount*45)
 	btn.Text = name
 	btn.Font = Enum.Font.GothamBold
 	btn.TextSize = 14
-	btn.TextColor3 = Color3.fromRGB(0,0,0)
 	btn.BackgroundColor3 = Color3.fromRGB(235,235,235)
+	btn.TextColor3 = Color3.new(0,0,0)
 	Instance.new("UICorner", btn).CornerRadius = UDim.new(0,12)
 
 	local page = Instance.new("Frame", Pages)
@@ -127,7 +119,7 @@ local function createTab(name)
 		CurrentTab = page
 	end)
 
-	table.insert(Tabs, btn)
+	tabCount += 1
 	if not CurrentTab then
 		page.Visible = true
 		CurrentTab = page
@@ -137,7 +129,7 @@ local function createTab(name)
 end
 
 -------------------------------------------------
--- TAB 1 : SCRIPT INFO
+-- TAB 1 : INFO
 -------------------------------------------------
 local InfoTab = createTab("Script Info")
 
@@ -147,19 +139,17 @@ InfoText.Position = UDim2.new(0,5,0,5)
 InfoText.BackgroundTransparency = 1
 InfoText.TextWrapped = true
 InfoText.TextYAlignment = Enum.TextYAlignment.Top
-InfoText.TextXAlignment = Enum.TextXAlignment.Left
 InfoText.Font = Enum.Font.GothamBold
 InfoText.TextSize = 16
-InfoText.TextColor3 = Color3.fromRGB(0,0,0)
+InfoText.TextColor3 = Color3.new(0,0,0)
 InfoText.Text = [[
 SLKS GAMING HUB
 
 Game: Forsaken
 Platform: Mobile (Delta)
 
-Features:
-• WalkSpeed
-• ESP ON / OFF
+• WalkSpeed ON / OFF
+• ESP Player + Distance
 • Clean UI
 
 By SLKS-GAMING
@@ -170,124 +160,128 @@ By SLKS-GAMING
 -------------------------------------------------
 local MainTab = createTab("Main")
 
--- WalkSpeed Label
+local wsValue = 16
+local wsEnabled = false
+
 local WSLabel = Instance.new("TextLabel", MainTab)
-WSLabel.Size = UDim2.new(1,-10,0,30)
+WSLabel.Size = UDim2.new(1,-10,0,25)
 WSLabel.Position = UDim2.new(0,5,0,5)
 WSLabel.BackgroundTransparency = 1
 WSLabel.Text = "WalkSpeed: 16"
 WSLabel.Font = Enum.Font.GothamBold
 WSLabel.TextSize = 16
-WSLabel.TextColor3 = Color3.fromRGB(0,0,0)
+WSLabel.TextColor3 = Color3.new(0,0,0)
 WSLabel.TextXAlignment = Enum.TextXAlignment.Left
 
--- WalkSpeed Slider
+-- Slider
 local SliderBG = Instance.new("Frame", MainTab)
 SliderBG.Size = UDim2.new(1,-10,0,16)
-SliderBG.Position = UDim2.new(0,5,0,45)
+SliderBG.Position = UDim2.new(0,5,0,40)
 SliderBG.BackgroundColor3 = Color3.fromRGB(220,220,220)
-SliderBG.BorderSizePixel = 0
 Instance.new("UICorner", SliderBG).CornerRadius = UDim.new(1,0)
 
 local SliderFill = Instance.new("Frame", SliderBG)
-SliderFill.Size = UDim2.new(16/100,0,1,0)
+SliderFill.Size = UDim2.new(0.16,0,1,0)
 SliderFill.BackgroundColor3 = Color3.fromRGB(0,140,255)
-SliderFill.BorderSizePixel = 0
 Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1,0)
 
 local draggingSlider = false
 
-local function setSpeedFromX(x)
-	local rel = math.clamp(
-		(x - SliderBG.AbsolutePosition.X) / SliderBG.AbsoluteSize.X,
-		0,1
-	)
-	local speed = math.floor(rel * 100)
+local function updateSpeed(x)
+	local rel = math.clamp((x-SliderBG.AbsolutePosition.X)/SliderBG.AbsoluteSize.X,0,1)
+	wsValue = math.floor(rel*100)
 	SliderFill.Size = UDim2.new(rel,0,1,0)
-	WSLabel.Text = "WalkSpeed: "..speed
-
-	local char = player.Character
-	if char and char:FindFirstChild("Humanoid") then
-		char.Humanoid.WalkSpeed = speed
+	WSLabel.Text = "WalkSpeed: "..wsValue
+	if wsEnabled and player.Character and player.Character:FindFirstChild("Humanoid") then
+		player.Character.Humanoid.WalkSpeed = wsValue
 	end
 end
 
-SliderBG.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.Touch
-	or input.UserInputType == Enum.UserInputType.MouseButton1 then
+SliderBG.InputBegan:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
 		draggingSlider = true
-		setSpeedFromX(input.Position.X)
+		updateSpeed(i.Position.X)
 	end
 end)
 
-UIS.InputChanged:Connect(function(input)
-	if draggingSlider and (input.UserInputType == Enum.UserInputType.Touch
-	or input.UserInputType == Enum.UserInputType.MouseMovement) then
-		setSpeedFromX(input.Position.X)
-	end
+UIS.InputChanged:Connect(function(i)
+	if draggingSlider then updateSpeed(i.Position.X) end
 end)
 
-UIS.InputEnded:Connect(function()
-	draggingSlider = false
+UIS.InputEnded:Connect(function() draggingSlider = false end)
+
+-- WalkSpeed Toggle
+local WSToggle = Instance.new("TextButton", MainTab)
+WSToggle.Size = UDim2.new(1,-10,0,35)
+WSToggle.Position = UDim2.new(0,5,0,70)
+WSToggle.Text = "WalkSpeed : OFF"
+WSToggle.Font = Enum.Font.GothamBold
+WSToggle.TextSize = 16
+WSToggle.TextColor3 = Color3.new(1,1,1)
+WSToggle.BackgroundColor3 = Color3.fromRGB(200,60,60)
+Instance.new("UICorner", WSToggle).CornerRadius = UDim.new(0,12)
+
+WSToggle.MouseButton1Click:Connect(function()
+	wsEnabled = not wsEnabled
+	if player.Character and player.Character:FindFirstChild("Humanoid") then
+		player.Character.Humanoid.WalkSpeed = wsEnabled and wsValue or 16
+	end
+	WSToggle.Text = wsEnabled and "WalkSpeed : ON" or "WalkSpeed : OFF"
+	WSToggle.BackgroundColor3 = wsEnabled and Color3.fromRGB(60,180,90) or Color3.fromRGB(200,60,60)
 end)
 
 -------------------------------------------------
--- ESP TOGGLE
+-- ESP PLAYER + DISTANCE
 -------------------------------------------------
 local espEnabled = false
-local espObjects = {}
+local espFolder = Instance.new("Folder", gui)
+espFolder.Name = "ESP_FOLDER"
 
 local function clearESP()
-	for _,v in pairs(espObjects) do
-		if v then v:Destroy() end
-	end
-	table.clear(espObjects)
-end
-
-local function createESP(plr)
-	if plr == player then return end
-	if not plr.Character then return end
-	local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
-	if not hrp then return end
-
-	local box = Instance.new("BoxHandleAdornment")
-	box.Size = Vector3.new(4,6,2)
-	box.Adornee = hrp
-	box.Color3 = Color3.fromRGB(255,0,0)
-	box.AlwaysOnTop = true
-	box.ZIndex = 10
-	box.Transparency = 0.4
-	box.Parent = gui
-
-	table.insert(espObjects, box)
+	espFolder:ClearAllChildren()
 end
 
 RunService.RenderStepped:Connect(function()
-	if not espEnabled then return end
 	clearESP()
+	if not espEnabled then return end
+	local myHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	if not myHRP then return end
+
 	for _,plr in pairs(Players:GetPlayers()) do
-		createESP(plr)
+		if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+			local hrp = plr.Character.HumanoidRootPart
+			local dist = math.floor((hrp.Position-myHRP.Position).Magnitude)
+
+			local bb = Instance.new("BillboardGui", espFolder)
+			bb.Adornee = hrp
+			bb.Size = UDim2.new(0,200,0,40)
+			bb.AlwaysOnTop = true
+
+			local txt = Instance.new("TextLabel", bb)
+			txt.Size = UDim2.new(1,0,1,0)
+			txt.BackgroundTransparency = 1
+			txt.Text = plr.Name.." ["..dist.."m]"
+			txt.TextColor3 = Color3.fromRGB(255,0,0)
+			txt.TextStrokeTransparency = 0
+			txt.Font = Enum.Font.GothamBold
+			txt.TextScaled = true
+		end
 	end
 end)
 
-local ESPButton = Instance.new("TextButton", MainTab)
-ESPButton.Size = UDim2.new(1,-10,0,35)
-ESPButton.Position = UDim2.new(0,5,0,80)
-ESPButton.Text = "ESP : OFF"
-ESPButton.Font = Enum.Font.GothamBold
-ESPButton.TextSize = 16
-ESPButton.TextColor3 = Color3.fromRGB(255,255,255)
-ESPButton.BackgroundColor3 = Color3.fromRGB(200,60,60)
-Instance.new("UICorner", ESPButton).CornerRadius = UDim.new(0,12)
+local ESPBtn = Instance.new("TextButton", MainTab)
+ESPBtn.Size = UDim2.new(1,-10,0,35)
+ESPBtn.Position = UDim2.new(0,5,0,115)
+ESPBtn.Text = "ESP : OFF"
+ESPBtn.Font = Enum.Font.GothamBold
+ESPBtn.TextSize = 16
+ESPBtn.TextColor3 = Color3.new(1,1,1)
+ESPBtn.BackgroundColor3 = Color3.fromRGB(200,60,60)
+Instance.new("UICorner", ESPBtn).CornerRadius = UDim.new(0,12)
 
-ESPButton.MouseButton1Click:Connect(function()
+ESPBtn.MouseButton1Click:Connect(function()
 	espEnabled = not espEnabled
-	if espEnabled then
-		ESPButton.Text = "ESP : ON"
-		ESPButton.BackgroundColor3 = Color3.fromRGB(60,180,90)
-	else
-		ESPButton.Text = "ESP : OFF"
-		ESPButton.BackgroundColor3 = Color3.fromRGB(200,60,60)
-		clearESP()
-	end
+	ESPBtn.Text = espEnabled and "ESP : ON" or "ESP : OFF"
+	ESPBtn.BackgroundColor3 = espEnabled and Color3.fromRGB(60,180,90) or Color3.fromRGB(200,60,60)
+	if not espEnabled then clearESP() end
 end)
