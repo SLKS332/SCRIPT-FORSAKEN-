@@ -1,5 +1,6 @@
 -- SLKS GAMING | By SLKS-GAMING
 -- Forsaken | Mobile Safe (Delta)
+-- NOTE: This is DEMO VERSION
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
@@ -39,7 +40,7 @@ Title.Size = UDim2.new(1,-120,1,0)
 Title.Position = UDim2.new(0,15,0,0)
 Title.BackgroundTransparency = 1
 Title.RichText = true
-Title.Text = "<b>SLKS GAMING</b>\n<font size='14'>By SLKS-GAMING</font>"
+Title.Text = "<b>SLKS GAMING</b>\n<font size='14'>DEMO VERSION</font>"
 Title.Font = Enum.Font.GothamBold
 Title.TextScaled = true
 Title.TextColor3 = Color3.new(1,1,1)
@@ -59,7 +60,7 @@ Close.MouseButton1Click:Connect(function()
 	gui:Destroy()
 end)
 
--- MINIMIZE ✅
+-- MINIMIZE
 local Minimize = Instance.new("TextButton", Header)
 Minimize.Size = UDim2.new(0,40,0,30)
 Minimize.Position = UDim2.new(1,-90,0.2,0)
@@ -68,6 +69,14 @@ Minimize.Font = Enum.Font.GothamBold
 Minimize.TextScaled = true
 Minimize.BackgroundColor3 = Color3.fromRGB(255,200,80)
 Instance.new("UICorner", Minimize).CornerRadius = UDim.new(1,0)
+
+-------------------------------------------------
+-- CONTENT (FIX BUG)
+-------------------------------------------------
+local Content = Instance.new("Frame", Main)
+Content.Size = UDim2.new(1,0,1,-50)
+Content.Position = UDim2.new(0,0,0,50)
+Content.BackgroundTransparency = 1
 
 -------------------------------------------------
 -- DRAG
@@ -101,36 +110,31 @@ end)
 -------------------------------------------------
 -- TAB SYSTEM
 -------------------------------------------------
-local TabBar = Instance.new("Frame", Main)
-TabBar.Size = UDim2.new(0,120,1,-60)
-TabBar.Position = UDim2.new(0,10,0,55)
+local TabBar = Instance.new("Frame", Content)
+TabBar.Size = UDim2.new(0,120,1,-10)
+TabBar.Position = UDim2.new(0,10,0,5)
 TabBar.BackgroundTransparency = 1
 
-local Pages = Instance.new("Frame", Main)
-Pages.Size = UDim2.new(1,-150,1,-60)
-Pages.Position = UDim2.new(0,140,0,55)
+local Pages = Instance.new("Frame", Content)
+Pages.Size = UDim2.new(1,-150,1,-10)
+Pages.Position = UDim2.new(0,140,0,5)
 Pages.BackgroundTransparency = 1
 
--- MINIMIZE LOGIC ✅
+-------------------------------------------------
+-- MINIMIZE SAFE
+-------------------------------------------------
 local minimized = false
-local oldSize = Main.Size
+local fullSize = Main.Size
 
 Minimize.MouseButton1Click:Connect(function()
 	minimized = not minimized
 	if minimized then
-		oldSize = Main.Size
+		Content.Visible = false
 		Main.Size = UDim2.new(0,420,0,55)
-		for _,v in ipairs(Main:GetChildren()) do
-			if v ~= Header then
-				v.Visible = false
-			end
-		end
 		Minimize.Text = "+"
 	else
-		Main.Size = oldSize
-		for _,v in ipairs(Main:GetChildren()) do
-			v.Visible = true
-		end
+		Content.Visible = true
+		Main.Size = fullSize
 		Minimize.Text = "-"
 	end
 end)
@@ -178,7 +182,7 @@ end
 local MainTab = createTab("Main")
 
 -------------------------------------------------
--- ESP PLAYER (RED / GREEN)
+-- ESP PLAYER
 -------------------------------------------------
 local espEnabled = false
 local espCache = {}
@@ -186,12 +190,8 @@ local espCache = {}
 local function isKiller(plr)
 	local char = plr.Character
 	if not char then return false end
-
 	local role = char:GetAttribute("Role")
-	if role and tostring(role):lower():find("killer") then
-		return true
-	end
-	return false
+	return role and tostring(role):lower():find("killer")
 end
 
 local function clearESP()
