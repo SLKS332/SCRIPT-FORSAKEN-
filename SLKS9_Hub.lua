@@ -45,6 +45,7 @@ Title.TextScaled = true
 Title.TextColor3 = Color3.new(1,1,1)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 
+-- CLOSE
 local Close = Instance.new("TextButton", Header)
 Close.Size = UDim2.new(0,40,0,30)
 Close.Position = UDim2.new(1,-45,0.2,0)
@@ -57,6 +58,16 @@ Instance.new("UICorner", Close).CornerRadius = UDim.new(1,0)
 Close.MouseButton1Click:Connect(function()
 	gui:Destroy()
 end)
+
+-- MINIMIZE ✅
+local Minimize = Instance.new("TextButton", Header)
+Minimize.Size = UDim2.new(0,40,0,30)
+Minimize.Position = UDim2.new(1,-90,0.2,0)
+Minimize.Text = "-"
+Minimize.Font = Enum.Font.GothamBold
+Minimize.TextScaled = true
+Minimize.BackgroundColor3 = Color3.fromRGB(255,200,80)
+Instance.new("UICorner", Minimize).CornerRadius = UDim.new(1,0)
 
 -------------------------------------------------
 -- DRAG
@@ -100,6 +111,33 @@ Pages.Size = UDim2.new(1,-150,1,-60)
 Pages.Position = UDim2.new(0,140,0,55)
 Pages.BackgroundTransparency = 1
 
+-- MINIMIZE LOGIC ✅
+local minimized = false
+local oldSize = Main.Size
+
+Minimize.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	if minimized then
+		oldSize = Main.Size
+		Main.Size = UDim2.new(0,420,0,55)
+		for _,v in ipairs(Main:GetChildren()) do
+			if v ~= Header then
+				v.Visible = false
+			end
+		end
+		Minimize.Text = "+"
+	else
+		Main.Size = oldSize
+		for _,v in ipairs(Main:GetChildren()) do
+			v.Visible = true
+		end
+		Minimize.Text = "-"
+	end
+end)
+
+-------------------------------------------------
+-- TAB CREATE
+-------------------------------------------------
 local CurrentTab
 local tabCount = 0
 
@@ -135,47 +173,22 @@ local function createTab(name)
 end
 
 -------------------------------------------------
--- TAB 1 : INFO
--------------------------------------------------
-local InfoTab = createTab("Script Info")
-
-local InfoText = Instance.new("TextLabel", InfoTab)
-InfoText.Size = UDim2.new(1,-10,1,-10)
-InfoText.Position = UDim2.new(0,5,0,5)
-InfoText.BackgroundTransparency = 1
-InfoText.TextWrapped = true
-InfoText.TextYAlignment = Enum.TextYAlignment.Top
-InfoText.Font = Enum.Font.GothamBold
-InfoText.TextSize = 16
-InfoText.TextColor3 = Color3.new(0,0,0)
-InfoText.Text = [[
-SLKS GAMING HUB
-
-Game: Forsaken
-Platform: Mobile (Delta)
-
-• ESP Role Color
-• Teleport Speed (Anti Block)
-
-By SLKS-GAMING
-]]
-
--------------------------------------------------
--- TAB 2 : MAIN
+-- TAB MAIN
 -------------------------------------------------
 local MainTab = createTab("Main")
 
 -------------------------------------------------
--- ESP ROLE COLOR
+-- ESP PLAYER (RED / GREEN)
 -------------------------------------------------
 local espEnabled = false
 local espCache = {}
 
 local function isKiller(plr)
-	if plr.Team and plr.Team.Name:lower():find("killer") then
-		return true
-	end
-	if plr:GetAttribute("Role") == "Killer" then
+	local char = plr.Character
+	if not char then return false end
+
+	local role = char:GetAttribute("Role")
+	if role and tostring(role):lower():find("killer") then
 		return true
 	end
 	return false
@@ -189,38 +202,28 @@ local function clearESP()
 end
 
 local function addESP(plr)
-	if plr == player then return end
-	if not plr.Character then return end
-	if espCache[plr] then return end
-
+	if plr == player or not plr.Character or espCache[plr] then return end
 	local h = Instance.new("Highlight")
-
-	if isKiller(plr) then
-		h.FillColor = Color3.fromRGB(255,0,0) -- Killer 🔴
-	else
-		h.FillColor = Color3.fromRGB(0,255,0) -- Survivor 🟢
-	end
-
+	h.FillColor = isKiller(plr) and Color3.fromRGB(255,0,0) or Color3.fromRGB(0,255,0)
 	h.OutlineColor = Color3.fromRGB(255,255,255)
 	h.FillTransparency = 0.45
-	h.OutlineTransparency = 0
 	h.Adornee = plr.Character
 	h.Parent = game.CoreGui
-
 	espCache[plr] = h
 end
 
 RunService.RenderStepped:Connect(function()
-	if not espEnabled then return end
-	for _,plr in ipairs(Players:GetPlayers()) do
-		addESP(plr)
+	if espEnabled then
+		for _,plr in ipairs(Players:GetPlayers()) do
+			addESP(plr)
+		end
 	end
 end)
 
 local ESPBtn = Instance.new("TextButton", MainTab)
 ESPBtn.Size = UDim2.new(1,-10,0,35)
 ESPBtn.Position = UDim2.new(0,5,0,5)
-ESPBtn.Text = "ESP : OFF"
+ESPBtn.Text = "ESP Player : OFF"
 ESPBtn.Font = Enum.Font.GothamBold
 ESPBtn.TextSize = 16
 ESPBtn.TextColor3 = Color3.new(1,1,1)
@@ -229,44 +232,7 @@ Instance.new("UICorner", ESPBtn).CornerRadius = UDim.new(0,12)
 
 ESPBtn.MouseButton1Click:Connect(function()
 	espEnabled = not espEnabled
-	ESPBtn.Text = espEnabled and "ESP : ON" or "ESP : OFF"
+	ESPBtn.Text = espEnabled and "ESP Player : ON" or "ESP Player : OFF"
 	ESPBtn.BackgroundColor3 = espEnabled and Color3.fromRGB(60,180,90) or Color3.fromRGB(200,60,60)
 	if not espEnabled then clearESP() end
-end)
-
--------------------------------------------------
--- TELEPORT SPEED (FORSAKEN SAFE)
--------------------------------------------------
-local tpEnabled = false
-local tpSpeed = 2.5
-
-RunService.RenderStepped:Connect(function()
-	if not tpEnabled then return end
-
-	local char = player.Character
-	if not char then return end
-
-	local hrp = char:FindFirstChild("HumanoidRootPart")
-	local hum = char:FindFirstChildOfClass("Humanoid")
-	if not hrp or not hum then return end
-
-	if hum.MoveDirection.Magnitude > 0 then
-		hrp.CFrame = hrp.CFrame + hum.MoveDirection * tpSpeed
-	end
-end)
-
-local TPBtn = Instance.new("TextButton", MainTab)
-TPBtn.Size = UDim2.new(1,-10,0,35)
-TPBtn.Position = UDim2.new(0,5,0,50)
-TPBtn.Text = "Teleport Speed : OFF"
-TPBtn.Font = Enum.Font.GothamBold
-TPBtn.TextSize = 16
-TPBtn.TextColor3 = Color3.new(1,1,1)
-TPBtn.BackgroundColor3 = Color3.fromRGB(200,60,60)
-Instance.new("UICorner", TPBtn).CornerRadius = UDim.new(0,12)
-
-TPBtn.MouseButton1Click:Connect(function()
-	tpEnabled = not tpEnabled
-	TPBtn.Text = tpEnabled and "Teleport Speed : ON" or "Teleport Speed : OFF"
-	TPBtn.BackgroundColor3 = tpEnabled and Color3.fromRGB(60,180,90) or Color3.fromRGB(200,60,60)
 end)
