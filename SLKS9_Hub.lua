@@ -72,13 +72,20 @@ Header.InputBegan:Connect(function(i)
 end)
 
 UIS.InputChanged:Connect(function(i)
-	if dragging and (i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseMovement) then
+	if dragging then
 		local delta = i.Position - dragStart
-		Main.Position = UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
+		Main.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
 	end
 end)
 
-UIS.InputEnded:Connect(function() dragging = false end)
+UIS.InputEnded:Connect(function()
+	dragging = false
+end)
 
 -------------------------------------------------
 -- TAB SYSTEM
@@ -147,8 +154,8 @@ SLKS GAMING HUB
 Game: Forsaken
 Platform: Mobile (Delta)
 
-• WalkSpeed (Anti Reset)
-• ESP Player (Anti Block)
+• ESP Role Color
+• Teleport Speed (Anti Block)
 
 By SLKS-GAMING
 ]]
@@ -159,98 +166,20 @@ By SLKS-GAMING
 local MainTab = createTab("Main")
 
 -------------------------------------------------
--- WALKSPEED (FIX FOR FORSAKEN)
--------------------------------------------------
-local wsValue = 16
-local wsEnabled = false
-
-local function getHumanoid()
-	local char = player.Character
-	if char then
-		return char:FindFirstChildOfClass("Humanoid")
-	end
-end
-
-RunService.Stepped:Connect(function()
-	if not wsEnabled then return end
-	local hum = getHumanoid()
-	if hum and hum.WalkSpeed ~= wsValue then
-		hum.WalkSpeed = wsValue
-	end
-end)
-
-player.CharacterAdded:Connect(function()
-	task.wait(1)
-	if wsEnabled then
-		local hum = getHumanoid()
-		if hum then hum.WalkSpeed = wsValue end
-	end
-end)
-
-local WSLabel = Instance.new("TextLabel", MainTab)
-WSLabel.Size = UDim2.new(1,-10,0,25)
-WSLabel.Position = UDim2.new(0,5,0,5)
-WSLabel.BackgroundTransparency = 1
-WSLabel.Text = "WalkSpeed: 16"
-WSLabel.Font = Enum.Font.GothamBold
-WSLabel.TextSize = 16
-WSLabel.TextColor3 = Color3.new(0,0,0)
-WSLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-local SliderBG = Instance.new("Frame", MainTab)
-SliderBG.Size = UDim2.new(1,-10,0,16)
-SliderBG.Position = UDim2.new(0,5,0,40)
-SliderBG.BackgroundColor3 = Color3.fromRGB(220,220,220)
-Instance.new("UICorner", SliderBG).CornerRadius = UDim.new(1,0)
-
-local SliderFill = Instance.new("Frame", SliderBG)
-SliderFill.Size = UDim2.new(0.16,0,1,0)
-SliderFill.BackgroundColor3 = Color3.fromRGB(0,140,255)
-Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1,0)
-
-local draggingSlider = false
-
-local function updateSpeed(x)
-	local rel = math.clamp((x-SliderBG.AbsolutePosition.X)/SliderBG.AbsoluteSize.X,0,1)
-	wsValue = math.floor(rel*100)
-	SliderFill.Size = UDim2.new(rel,0,1,0)
-	WSLabel.Text = "WalkSpeed: "..wsValue
-end
-
-SliderBG.InputBegan:Connect(function(i)
-	if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
-		draggingSlider = true
-		updateSpeed(i.Position.X)
-	end
-end)
-
-UIS.InputChanged:Connect(function(i)
-	if draggingSlider then updateSpeed(i.Position.X) end
-end)
-
-UIS.InputEnded:Connect(function() draggingSlider = false end)
-
-local WSToggle = Instance.new("TextButton", MainTab)
-WSToggle.Size = UDim2.new(1,-10,0,35)
-WSToggle.Position = UDim2.new(0,5,0,70)
-WSToggle.Text = "WalkSpeed : OFF"
-WSToggle.Font = Enum.Font.GothamBold
-WSToggle.TextSize = 16
-WSToggle.TextColor3 = Color3.new(1,1,1)
-WSToggle.BackgroundColor3 = Color3.fromRGB(200,60,60)
-Instance.new("UICorner", WSToggle).CornerRadius = UDim.new(0,12)
-
-WSToggle.MouseButton1Click:Connect(function()
-	wsEnabled = not wsEnabled
-	WSToggle.Text = wsEnabled and "WalkSpeed : ON" or "WalkSpeed : OFF"
-	WSToggle.BackgroundColor3 = wsEnabled and Color3.fromRGB(60,180,90) or Color3.fromRGB(200,60,60)
-end)
-
--------------------------------------------------
--- ESP (FIX FOR FORSAKEN)
+-- ESP ROLE COLOR
 -------------------------------------------------
 local espEnabled = false
 local espCache = {}
+
+local function isKiller(plr)
+	if plr.Team and plr.Team.Name:lower():find("killer") then
+		return true
+	end
+	if plr:GetAttribute("Role") == "Killer" then
+		return true
+	end
+	return false
+end
 
 local function clearESP()
 	for _,v in pairs(espCache) do
@@ -265,9 +194,15 @@ local function addESP(plr)
 	if espCache[plr] then return end
 
 	local h = Instance.new("Highlight")
-	h.FillColor = Color3.fromRGB(255,0,0)
+
+	if isKiller(plr) then
+		h.FillColor = Color3.fromRGB(255,0,0) -- Killer 🔴
+	else
+		h.FillColor = Color3.fromRGB(0,255,0) -- Survivor 🟢
+	end
+
 	h.OutlineColor = Color3.fromRGB(255,255,255)
-	h.FillTransparency = 0.5
+	h.FillTransparency = 0.45
 	h.OutlineTransparency = 0
 	h.Adornee = plr.Character
 	h.Parent = game.CoreGui
@@ -277,14 +212,14 @@ end
 
 RunService.RenderStepped:Connect(function()
 	if not espEnabled then return end
-	for _,plr in pairs(Players:GetPlayers()) do
+	for _,plr in ipairs(Players:GetPlayers()) do
 		addESP(plr)
 	end
 end)
 
 local ESPBtn = Instance.new("TextButton", MainTab)
 ESPBtn.Size = UDim2.new(1,-10,0,35)
-ESPBtn.Position = UDim2.new(0,5,0,115)
+ESPBtn.Position = UDim2.new(0,5,0,5)
 ESPBtn.Text = "ESP : OFF"
 ESPBtn.Font = Enum.Font.GothamBold
 ESPBtn.TextSize = 16
@@ -297,4 +232,41 @@ ESPBtn.MouseButton1Click:Connect(function()
 	ESPBtn.Text = espEnabled and "ESP : ON" or "ESP : OFF"
 	ESPBtn.BackgroundColor3 = espEnabled and Color3.fromRGB(60,180,90) or Color3.fromRGB(200,60,60)
 	if not espEnabled then clearESP() end
+end)
+
+-------------------------------------------------
+-- TELEPORT SPEED (FORSAKEN SAFE)
+-------------------------------------------------
+local tpEnabled = false
+local tpSpeed = 2.5
+
+RunService.RenderStepped:Connect(function()
+	if not tpEnabled then return end
+
+	local char = player.Character
+	if not char then return end
+
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	if not hrp or not hum then return end
+
+	if hum.MoveDirection.Magnitude > 0 then
+		hrp.CFrame = hrp.CFrame + hum.MoveDirection * tpSpeed
+	end
+end)
+
+local TPBtn = Instance.new("TextButton", MainTab)
+TPBtn.Size = UDim2.new(1,-10,0,35)
+TPBtn.Position = UDim2.new(0,5,0,50)
+TPBtn.Text = "Teleport Speed : OFF"
+TPBtn.Font = Enum.Font.GothamBold
+TPBtn.TextSize = 16
+TPBtn.TextColor3 = Color3.new(1,1,1)
+TPBtn.BackgroundColor3 = Color3.fromRGB(200,60,60)
+Instance.new("UICorner", TPBtn).CornerRadius = UDim.new(0,12)
+
+TPBtn.MouseButton1Click:Connect(function()
+	tpEnabled = not tpEnabled
+	TPBtn.Text = tpEnabled and "Teleport Speed : ON" or "Teleport Speed : OFF"
+	TPBtn.BackgroundColor3 = tpEnabled and Color3.fromRGB(60,180,90) or Color3.fromRGB(200,60,60)
 end)
