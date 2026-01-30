@@ -168,4 +168,42 @@ SLKS GAMING HUB
 
 Script Name: SLKS Hub
 Version: Mobile Edition
-Game: Forsaken (Roblox
+Game: Forsaken (Roblox)
+
+Features:
+- Mobile safe UI
+- Drag menu
+- Minimize to button
+- Tab system
+
+By SLKS-GAMING
+]]
+
+-------------------------------------------------
+-- MINIMIZE TO CIRCLE
+-------------------------------------------------
+local Circle = Instance.new("ImageButton", gui)
+Circle.Size = UDim2.new(0,60,0,60)
+Circle.Position = UDim2.new(0.05,0,0.5,0)
+Circle.BackgroundColor3 = Color3.fromRGB(0,140,255)
+Circle.Image = "rbxassetid://7072725342"
+Circle.Visible = false
+Circle.ZIndex = 20
+Instance.new("UICorner", Circle).CornerRadius = UDim.new(1,0)
+
+Min.MouseButton1Click:Connect(function()
+	Main.Visible = false
+	Circle.Visible = true
+end)
+
+Circle.MouseButton1Click:Connect(function()
+	Main.Visible = true
+	Circle.Visible = false
+end)
+
+-------------------------------------------------
+-- CLOSE
+-------------------------------------------------
+Close.MouseButton1Click:Connect(function()
+	gui:Destroy()
+end)
