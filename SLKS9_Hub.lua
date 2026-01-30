@@ -1,28 +1,28 @@
--- SLKS7_Hub.lua
+-- SLKS9_Hub.lua
 -- SLKS GAMING | By SLKS-GAMING
--- NO LOADING | MOBILE SAFE
+-- Mobile Safe | Delta OK
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 
+-------------------------------------------------
 -- GUI
+-------------------------------------------------
 local gui = Instance.new("ScreenGui")
 gui.Name = "SLKS_GUI"
 gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
 -------------------------------------------------
--- MAIN MENU
+-- MAIN FRAME
 -------------------------------------------------
 local Main = Instance.new("Frame", gui)
 Main.Size = UDim2.new(0,420,0,260)
 Main.Position = UDim2.new(0.5,-210,0.5,-130)
 Main.BackgroundColor3 = Color3.fromRGB(255,255,255)
-Main.BackgroundTransparency = 0.1
+Main.BackgroundTransparency = 0.05
 Main.Active = true
-Main.ZIndex = 10
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0,18)
 
 -------------------------------------------------
@@ -32,7 +32,6 @@ local Header = Instance.new("Frame", Main)
 Header.Size = UDim2.new(1,0,0,50)
 Header.BackgroundColor3 = Color3.fromRGB(0,140,255)
 Header.Active = true
-Header.ZIndex = 11
 Instance.new("UICorner", Header).CornerRadius = UDim.new(0,18)
 
 local Title = Instance.new("TextLabel", Header)
@@ -41,22 +40,10 @@ Title.Position = UDim2.new(0,15,0,0)
 Title.BackgroundTransparency = 1
 Title.RichText = true
 Title.Text = "<b>SLKS GAMING</b>\n<font size='14'>By SLKS-GAMING</font>"
-Title.TextColor3 = Color3.new(1,1,1)
 Title.Font = Enum.Font.GothamBold
 Title.TextScaled = true
+Title.TextColor3 = Color3.new(1,1,1)
 Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.ZIndex = 12
-
--- Buttons
-local Min = Instance.new("TextButton", Header)
-Min.Size = UDim2.new(0,40,0,30)
-Min.Position = UDim2.new(1,-90,0.2,0)
-Min.Text = "-"
-Min.Font = Enum.Font.GothamBold
-Min.TextScaled = true
-Min.BackgroundColor3 = Color3.fromRGB(255,255,255)
-Min.ZIndex = 13
-Instance.new("UICorner", Min).CornerRadius = UDim.new(1,0)
 
 local Close = Instance.new("TextButton", Header)
 Close.Size = UDim2.new(0,40,0,30)
@@ -65,92 +52,11 @@ Close.Text = "X"
 Close.Font = Enum.Font.GothamBold
 Close.TextScaled = true
 Close.BackgroundColor3 = Color3.fromRGB(255,90,90)
-Close.ZIndex = 13
 Instance.new("UICorner", Close).CornerRadius = UDim.new(1,0)
 
--------------------------------------------------
--- TAB SYSTEM
--------------------------------------------------
-local TabBar = Instance.new("Frame", Main)
-TabBar.Size = UDim2.new(0,130,1,-50)
-TabBar.Position = UDim2.new(0,0,0,50)
-TabBar.BackgroundColor3 = Color3.fromRGB(245,245,245)
-TabBar.ZIndex = 11
-Instance.new("UICorner", TabBar).CornerRadius = UDim.new(0,14)
-
-local Content = Instance.new("Frame", Main)
-Content.Size = UDim2.new(1,-140,1,-60)
-Content.Position = UDim2.new(0,135,0,55)
-Content.BackgroundTransparency = 1
-Content.ZIndex = 11
-
-local Tabs = {}
-
-local function createTab(name)
-	local Btn = Instance.new("TextButton", TabBar)
-	Btn.Size = UDim2.new(1,-10,0,40)
-	Btn.Position = UDim2.new(0,5,0,#Tabs*45 + 5)
-	Btn.Text = name
-	Btn.Font = Enum.Font.GothamBold
-	Btn.TextScaled = true
-	Btn.BackgroundColor3 = Color3.fromRGB(230,230,230)
-	Btn.TextColor3 = Color3.fromRGB(40,40,40)
-	Btn.ZIndex = 12
-	Instance.new("UICorner", Btn).CornerRadius = UDim.new(0,12)
-
-	local Page = Instance.new("Frame", Content)
-	Page.Size = UDim2.new(1,0,1,0)
-	Page.BackgroundTransparency = 1
-	Page.Visible = false
-	Page.ZIndex = 12
-
-	Btn.MouseButton1Click:Connect(function()
-		for _,v in pairs(Tabs) do
-			v.Page.Visible = false
-			v.Button.BackgroundColor3 = Color3.fromRGB(230,230,230)
-		end
-		Page.Visible = true
-		Btn.BackgroundColor3 = Color3.fromRGB(0,140,255)
-	end)
-
-	table.insert(Tabs,{Button = Btn, Page = Page})
-	return Page
-end
-
--------------------------------------------------
--- TAB 1 : SCRIPT INFO
--------------------------------------------------
-local InfoTab = createTab("Script Info")
-Tabs[1].Page.Visible = true
-Tabs[1].Button.BackgroundColor3 = Color3.fromRGB(0,140,255)
-
-local InfoText = Instance.new("TextLabel", InfoTab)
-InfoText.Size = UDim2.new(1,-10,1,-10)
-InfoText.Position = UDim2.new(0,5,0,5)
-InfoText.BackgroundTransparency = 1
-InfoText.TextWrapped = true
-InfoText.TextYAlignment = Enum.TextYAlignment.Top
-InfoText.Font = Enum.Font.Gotham
-InfoText.TextScaled = true
-InfoText.TextColor3 = Color3.fromRGB(30,30,30)
-
-InfoText.Text = [[
-SLKS GAMING HUB
-
-Script Name: SLKS Hub
-Version: Mobile Edition
-Executor: Delta / Mobile
-Game: Forsaken (Roblox)
-
-Features:
-• Mobile safe UI
-• Drag & move menu
-• Minimize to floating button
-• Tab system
-• Clean & lightweight
-
-By SLKS-GAMING
-]]
+Close.MouseButton1Click:Connect(function()
+	gui:Destroy()
+end)
 
 -------------------------------------------------
 -- DRAG MENU
@@ -168,7 +74,8 @@ Header.InputBegan:Connect(function(input)
 end)
 
 UIS.InputChanged:Connect(function(input)
-	if dragging then
+	if dragging and (input.UserInputType == Enum.UserInputType.Touch
+	or input.UserInputType == Enum.UserInputType.MouseMovement) then
 		local delta = input.Position - dragStart
 		Main.Position = UDim2.new(
 			startPos.X.Scale, startPos.X.Offset + delta.X,
@@ -182,30 +89,150 @@ UIS.InputEnded:Connect(function()
 end)
 
 -------------------------------------------------
--- MINIMIZE TO CIRCLE
+-- TAB SYSTEM
 -------------------------------------------------
-local Circle = Instance.new("ImageButton", gui)
-Circle.Size = UDim2.new(0,60,0,60)
-Circle.Position = UDim2.new(0.05,0,0.5,0)
-Circle.BackgroundColor3 = Color3.fromRGB(0,140,255)
-Circle.Image = "rbxassetid://7072725342"
-Circle.Visible = false
-Circle.ZIndex = 20
-Instance.new("UICorner", Circle).CornerRadius = UDim.new(1,0)
+local TabBar = Instance.new("Frame", Main)
+TabBar.Size = UDim2.new(0,120,1,-60)
+TabBar.Position = UDim2.new(0,10,0,55)
+TabBar.BackgroundTransparency = 1
 
-Min.MouseButton1Click:Connect(function()
-	Main.Visible = false
-	Circle.Visible = true
+local Pages = Instance.new("Frame", Main)
+Pages.Size = UDim2.new(1,-150,1,-60)
+Pages.Position = UDim2.new(0,140,0,55)
+Pages.BackgroundTransparency = 1
+
+local Tabs = {}
+local CurrentTab
+
+local function createTab(name)
+	local btn = Instance.new("TextButton", TabBar)
+	btn.Size = UDim2.new(1,0,0,40)
+	btn.Position = UDim2.new(0,0,0,#Tabs*45)
+	btn.Text = name
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 14
+	btn.TextColor3 = Color3.fromRGB(0,0,0)
+	btn.BackgroundColor3 = Color3.fromRGB(235,235,235)
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0,12)
+
+	local page = Instance.new("Frame", Pages)
+	page.Size = UDim2.new(1,0,1,0)
+	page.Visible = false
+	page.BackgroundTransparency = 1
+
+	btn.MouseButton1Click:Connect(function()
+		if CurrentTab then CurrentTab.Visible = false end
+		page.Visible = true
+		CurrentTab = page
+	end)
+
+	table.insert(Tabs, btn)
+	if not CurrentTab then
+		page.Visible = true
+		CurrentTab = page
+	end
+
+	return page
+end
+
+-------------------------------------------------
+-- TAB 1 : SCRIPT INFO
+-------------------------------------------------
+local InfoTab = createTab("Script Info")
+
+local InfoText = Instance.new("TextLabel", InfoTab)
+InfoText.Size = UDim2.new(1,-10,1,-10)
+InfoText.Position = UDim2.new(0,5,0,5)
+InfoText.BackgroundTransparency = 1
+InfoText.TextWrapped = true
+InfoText.TextYAlignment = Enum.TextYAlignment.Top
+InfoText.TextXAlignment = Enum.TextXAlignment.Left
+InfoText.Font = Enum.Font.GothamBold
+InfoText.TextSize = 16
+InfoText.TextColor3 = Color3.fromRGB(0,0,0)
+InfoText.Text = [[
+SLKS GAMING HUB
+
+Game: Forsaken
+Platform: Mobile (Delta)
+
+Features:
+• Clean UI
+• Mobile Safe
+• WalkSpeed Slider
+• More coming soon
+
+By SLKS-GAMING
+]]
+
+-------------------------------------------------
+-- TAB 2 : MAIN (WALKSPEED SLIDER 0–100)
+-------------------------------------------------
+local MainTab = createTab("Main")
+
+local WSLabel = Instance.new("TextLabel", MainTab)
+WSLabel.Size = UDim2.new(1,-10,0,30)
+WSLabel.Position = UDim2.new(0,5,0,5)
+WSLabel.BackgroundTransparency = 1
+WSLabel.Text = "WalkSpeed: 16"
+WSLabel.Font = Enum.Font.GothamBold
+WSLabel.TextSize = 16
+WSLabel.TextColor3 = Color3.fromRGB(0,0,0)
+WSLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local SliderBG = Instance.new("Frame", MainTab)
+SliderBG.Size = UDim2.new(1,-10,0,16)
+SliderBG.Position = UDim2.new(0,5,0,45)
+SliderBG.BackgroundColor3 = Color3.fromRGB(220,220,220)
+SliderBG.BorderSizePixel = 0
+Instance.new("UICorner", SliderBG).CornerRadius = UDim.new(1,0)
+
+local SliderFill = Instance.new("Frame", SliderBG)
+SliderFill.Size = UDim2.new(16/100,0,1,0)
+SliderFill.BackgroundColor3 = Color3.fromRGB(0,140,255)
+SliderFill.BorderSizePixel = 0
+Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1,0)
+
+local draggingSlider = false
+
+local function setSpeedFromX(x)
+	local rel = math.clamp(
+		(x - SliderBG.AbsolutePosition.X) / SliderBG.AbsoluteSize.X,
+		0,1
+	)
+	local speed = math.floor(rel * 100)
+	SliderFill.Size = UDim2.new(rel,0,1,0)
+	WSLabel.Text = "WalkSpeed: "..speed
+
+	local char = player.Character
+	if char and char:FindFirstChild("Humanoid") then
+		char.Humanoid.WalkSpeed = speed
+	end
+end
+
+SliderBG.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.Touch
+	or input.UserInputType == Enum.UserInputType.MouseButton1 then
+		draggingSlider = true
+		setSpeedFromX(input.Position.X)
+	end
 end)
 
-Circle.MouseButton1Click:Connect(function()
-	Main.Visible = true
-	Circle.Visible = false
+UIS.InputChanged:Connect(function(input)
+	if draggingSlider and (input.UserInputType == Enum.UserInputType.Touch
+	or input.UserInputType == Enum.UserInputType.MouseMovement) then
+		setSpeedFromX(input.Position.X)
+	end
 end)
 
--------------------------------------------------
--- CLOSE
--------------------------------------------------
-Close.MouseButton1Click:Connect(function()
-	gui:Destroy()
+UIS.InputEnded:Connect(function()
+	draggingSlider = false
+end)
+
+player.CharacterAdded:Connect(function()
+	task.wait(1)
+	local char = player.Character
+	if char and char:FindFirstChild("Humanoid") then
+		char.Humanoid.WalkSpeed = tonumber(WSLabel.Text:match("%d+")) or 16
+	end
 end)
